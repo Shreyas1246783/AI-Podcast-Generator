@@ -1,0 +1,203 @@
+{
+  "name": "AI Podcast Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.murf.ai/v1/speech/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "api-key",
+              "value": "ap2_d309b1f2-8fc3-43c8-9f66-9743856a255c"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "name": "voice_id",
+              "value": "en-US-natalie"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        576,
+        0
+      ],
+      "id": "b09a43c8-1987-45d3-992b-49706d3f06d9",
+      "name": "Generate Voice Audio with Murfai"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        296,
+        224
+      ],
+      "id": "2ec1c032-634f-4d1d-85a7-86b64406ce26",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "ZcEbdlPkNwMBJvPd",
+          "name": "Google Gemini(PaLM) Api account 7360"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.audioFile }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        0
+      ],
+      "id": "55a89dfb-0835-4077-a4a6-3e0174853e8f",
+      "name": "Podcast Downloader"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "{{$json.body.text}}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are a professional podcast script writer. Create engaging, informative podcast content based on the given topic:{{$json.body.text}} . Length should be 2 minute when spoken. Just give the content only without labelling "
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        224,
+        0
+      ],
+      "id": "fec25691-ee3b-488e-8476-2e40de867887",
+      "name": "Podcast Script Generator"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1024,
+        0
+      ],
+      "id": "04cb27a7-d51b-45c0-a92c-9a1278909125",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "6c50c8bd-127e-4e41-bb92-7f3c8500624b",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "21c5bff1-ff29-413c-a7e4-c9f4f2394d48",
+      "name": "Webhook",
+      "webhookId": "6c50c8bd-127e-4e41-bb92-7f3c8500624b"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Podcast Script Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Voice Audio with Murfai": {
+      "main": [
+        [
+          {
+            "node": "Podcast Downloader",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Podcast Script Generator": {
+      "main": [
+        [
+          {
+            "node": "Generate Voice Audio with Murfai",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Podcast Downloader": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Podcast Script Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "cf8999c6-d2cb-4c39-b64f-4be46e46dcb7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "969257b09ad2942bbaff2e2288304f4969030574d109cdeca05bf11f630884df"
+  },
+  "id": "7EWazoe8LSjayn8s",
+  "tags": []
+}
